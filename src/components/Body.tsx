@@ -37,27 +37,55 @@ export function Body() {
         }
     }, [city, API_KEY])
     return (
-        <div className="flex flex-col justify-center items-center gap-2">
-            <input type="search" placeholder="Search Places" value={city}
+        <div className="min-h-screen bg-slate-900 flex justify-center items-center p-4 font-sans text-white">
+    
+    {/* Main Weather Card */}
+    <div className="w-full max-w-md bg-slate-800/40 backdrop-blur-xl border border-slate-600/50 p-8 rounded-3xl shadow-2xl flex flex-col items-center">
+        
+        {/* Search Bar */}
+        <div className="w-full mb-8 relative">
+            <input 
+                type="search" 
+                placeholder="Search Places" 
+                value={city}
                 onChange={(event) => { setCity(event.target.value) }}
-                className="absolute top-0 right-0 w-1/5 px-4 py-2 border-2 border-gray-400 outline-none focus:shadow-md"
+                className="w-full px-6 py-3 bg-slate-900/50 border border-slate-500/50 rounded-full outline-none focus:ring-2 focus:ring-blue-400 focus:bg-slate-800 transition-all text-white placeholder-slate-400 shadow-inner"
             />
-            <label className="ml-4 mt-24 text-4xl my-4">
-               {data.main?.temp ? Math.round(data.main.temp) : "--"}°
-            </label>
-            <label className="mt-8 text-2xl">
-                {data.name}
-            </label>
-            <label>
-                {data.weather?.[0]?.main}
-            </label>
-            <label>
-                Feels like: {data.main?.feels_like}°C
-            </label>
-            <label>
-                Humidity: {data.main?.humidity}%
-            </label>
-            
         </div>
+
+        {/* City Name */}
+        <h2 className="text-3xl font-semibold tracking-wide mb-1 text-center">
+            {data.name || "Loading..."}
+        </h2>
+
+        {/* Weather Condition (e.g., Clouds, Rain) */}
+        <p className="text-blue-300 text-lg font-medium tracking-widest uppercase mb-6">
+            {data.weather?.[0]?.main || "--"}
+        </p>
+
+        {/* Massive Temperature */}
+        <h1 className="text-8xl font-light drop-shadow-lg mb-10 ml-4">
+            {data.main?.temp ? Math.round(data.main.temp) : "--"}°
+        </h1>
+
+        {/* Bottom Details Grid */}
+        <div className="w-full flex justify-between px-6 py-4 bg-slate-900/30 rounded-2xl border border-slate-600/30 shadow-sm">
+            <div className="flex flex-col items-center">
+                <span className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Feels Like</span>
+                <span className="text-xl font-semibold">
+                    {data.main?.feels_like ? Math.round(data.main.feels_like) : "--"}°C
+                </span>
+            </div>
+            
+            <div className="flex flex-col items-center">
+                <span className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Humidity</span>
+                <span className="text-xl font-semibold">
+                    {data.main?.humidity || "--"}%
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</div>
     )
 }
