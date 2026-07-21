@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
+import { useGeoLocation } from "../hooks/useGeoLocation";
 
 export function Body() {
     const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
@@ -33,6 +34,7 @@ export function Body() {
     const [city, setCity] = useState<string>("London");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const { coords, getLocation, setCoords } = useGeoLocation();
     const debounceCity = useDebounce(city, 500);
 
     useEffect(() => {
@@ -40,7 +42,8 @@ export function Body() {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${debounceCity}&appid=${API_KEY}&units=metric`);
+                const url = coords ? `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&appid=${API_KEY}&units=metric` : `https://api.openweathermap.org/data/2.5/weather?q=${debounceCity}&appid=${API_KEY}&units=metric`;
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error("Failed to fetch weather");
                 }
@@ -56,7 +59,7 @@ export function Body() {
         if (debounceCity) {
             fetchData();
         }
-    }, [debounceCity, API_KEY]);
+    }, [debounceCity, coords, API_KEY]);
 
     return (
         <div className="min-h-screen bg-slate-900 flex justify-center items-center p-4 font-sans text-white">
@@ -64,13 +67,25 @@ export function Body() {
             {/* Main Weather Card */}
             <div className="w-full max-w-md bg-slate-800/40 backdrop-blur-xl border border-slate-600/50 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-2">
 
+                {/* My Location */}
+                <div className="w-full mb-2 flex justify-center">
+                    <button onClick={getLocation} className="border border-slate-600/50 rounded-2xl shadow-2xl px-4 py-2 hover:scale-101 transition-all">
+                        Use my location
+                    </button>
+                </div>
+
                 {/* Search Bar */}
                 <div className="w-full mb-8 relative">
                     <input
                         type="search"
                         placeholder="Search Places"
                         value={city}
-                        onChange={(event) => { setCity(event.target.value) }}
+                        onChange={
+                            (event) => {
+                                setCity(event.target.value);
+                                setCoords(null);
+                            }}
+
                         className="w-full px-6 py-3 bg-slate-900/50 border border-slate-500/50 rounded-full outline-none focus:ring-2 focus:ring-blue-400 focus:bg-slate-800 transition-all text-white placeholder-slate-400 shadow-inner"
                     />
                 </div>

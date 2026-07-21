@@ -1,5 +1,5 @@
 // import { useState } from 'react';
-// import './App.css';
+import './App.css';
 import { Body } from "./components/Body.tsx";
 
 function App() {
