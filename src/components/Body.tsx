@@ -72,9 +72,11 @@ export function Body() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [unit, setUnit] = useState<"metric" | "imperial">("metric");
-    const [forecast, setForecast] = useState< ForecastData | null>(null)
+    const [forecast, setForecast] = useState<ForecastData | null>(null)
     const { coords, getLocation, setCoords } = useGeoLocation();
     const debounceCity = useDebounce(city, 500);
+    const [suggestion, setSuggestion] = useState<CitySuggestion[]>([]);
+    const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
 
 
 
@@ -124,6 +126,31 @@ export function Body() {
         if (coords || debounceCity) fetchForecast()
     }, [debounceCity, coords, unit, API_KEY])
 
+    interface CitySuggestion {
+        name: string;
+        country: string;
+        state?: string;
+        lat: number;
+        lon: number;
+    }
+
+    useEffect(() => {
+        const fetchSuggestion = async () => {
+            if (city.length < 2) {
+                setSuggestion([])
+                setShowSuggestion(false);
+                return;
+            }
+            try {
+                const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=5&appid=${API_KEY}`);
+                setSuggestion(await response.json());
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        fetchSuggestion();
+    }, [city, API_KEY])
+
 
     return (
         <div className="min-h-screen bg-slate-900 flex justify-center items-center p-4 font-sans text-white">
@@ -136,7 +163,11 @@ export function Body() {
                     <button onClick={getLocation} className="border border-slate-600/50 rounded-2xl shadow-2xl px-4 py-2 hover:scale-101 transition-all">
                         Use my location
                     </button>
-                    <button onClick={() => { setUnit((e) => e === "metric" ? "imperial" : "metric") }} className="border border-slate-600/50 rounded-2xl shadow-2xl p-2 absolute top-0 right-1 hover:scale-103 transition-all">
+                    <button className="border border-slate-600/50 rounded-2xl shadow-2xl p-2 absolute top-0 right-1 hover:scale-103 transition-all" onClick={
+                        () => {
+                            setUnit((e) => e === "metric" ? "imperial" : "metric")
+                        }
+                    }>
                         {unit === "metric" ? "°C" : "F"}
                     </button>
                 </div>
@@ -151,11 +182,39 @@ export function Body() {
                             (event) => {
                                 setCity(event.target.value);
                                 setCoords(null);
-                            }}
-
+                                setShowSuggestion(true);
+                            }
+                        }
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                setShowSuggestion(false)
+                            }
+                        }}
                         className="w-full px-6 py-3 bg-slate-900/50 border border-slate-500/50 rounded-full outline-none focus:ring-2 focus:ring-blue-400 focus:bg-slate-800 transition-all text-white placeholder-slate-400 shadow-inner"
                     />
                 </div>
+
+                {/* Search Suggestion */}
+                {showSuggestion && (
+                    <div className="w-full relative">
+                        <ul className="absolute top-1 w-full bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-10">
+                            {suggestion.map((suggest) => (
+                                <li
+                                    key={suggest.lat + suggest.lon}
+                                    onClick={() => {
+                                        setCoords({ lat: suggest.lat, lon: suggest.lon })
+                                        setShowSuggestion(false)
+                                        setCity(suggest.name)
+                                    }}
+                                    className="px-4 py-3 text-slate-200 hover:bg-slate-700/50 cursor-pointer transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-700/50 last:border-b-0"
+                                >
+                                    {suggest.name}
+                                    {suggest.state ? `, ${suggest.state}` : ""}, {suggest.country}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* Loading state */}
                 {loading && (
