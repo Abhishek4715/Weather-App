@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { History } from "lucide-react";
-import { Trash } from "lucide-react";
+import { History, Trash, Pin, PinOff } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useGeoLocation } from "../hooks/useGeoLocation";
 import { ForecastChart } from "./ForeCastChart"
@@ -102,11 +101,29 @@ export function Body() {
         }
         return [];
     });
+    const [pined, setPined] = useState<Array<CitySuggestion>>(() => {
+        const his = localStorage.getItem("pined");
+        if (his) {
+            try {
+                const parsed = JSON.parse(his);
+                return Array.isArray(parsed) ? parsed : [];
+            }
+            catch (error) {
+                console.error("Error parsing pined", error);
+                return [];
+            }
+        }
+        return [];
+    });
 
 
     useEffect(() => {
         localStorage.setItem("history", JSON.stringify(history));
-    }, [history])
+    }, [history]);
+
+    useEffect(() => {
+        localStorage.setItem("pined", JSON.stringify(pined));
+    }, [pined]);
 
 
     useEffect(() => {
@@ -126,7 +143,7 @@ export function Body() {
 
                 const newHistoryItem: CitySuggestion = {
                     name: fetchData.name ?? debounceCity,
-                    country: fetchData.sys?.country ?? "",
+                    country: fetchData.country ?? "",
                     state: "",
                     lat: fetchData.coord?.lat ?? 0,
                     lon: fetchData.coord?.lon ?? 0,
@@ -140,7 +157,6 @@ export function Body() {
 
                     return alreadyExists ? safePrev : [newHistoryItem, ...safePrev];
                 });
-
             } catch (error) {
                 setError(error instanceof Error ? error.message : "City not found");
             }
@@ -217,15 +233,67 @@ export function Body() {
                                 <Trash />
                             </button>
                         </div>
+                        <ul>
+                            {pined && (
+                                pined.map((pin, index) => (
+                                    <li key={pin.name + pin.country + index} className="px-4 py-3 text-slate-200 hover:bg-slate-700/50 cursor-pointer transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-700/50 last:border-b-0 flex justify-between"
+                                    onClick={() => {
+                                        setCoords({ lat: pin.lat, lon: pin.lon })
+                                        setShowPanel(false);
+                                    }}>
+                                    {pin.name},
+                                    {pin.state ? ` ${pin.state},` : ""} {pin.country}
+                                    <button onClick={(event) => {
+                                        event.stopPropagation();
+                                        const newHistoryItem: CitySuggestion = {
+                                            name: pin.name ?? debounceCity,
+                                            country: pin.country ?? "",
+                                            state: "",
+                                            lat: pin.lat ?? 0,
+                                            lon: pin.lon ?? 0,
+                                        };
+                                        setHistory((prev) => {
+                                            return [...prev,newHistoryItem];
+                                        })
+                                        setPined((prev) => 
+                                            prev.filter((eachPin) => eachPin.name !== pin.name || eachPin.country !== pin.country)
+                                        )
+                                    }}>
+                                        <PinOff />
+                                    </button>
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+
+
                         <ul>{history && (
                             history.map((his, index) => (
-                                <li key={his.name + his.country + index} className="px-4 py-3 text-slate-200 hover:bg-slate-700/50 cursor-pointer transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-700/50 last:border-b-0"
+                                <li key={his.name + his.country + index} className="px-4 py-3 text-slate-200 hover:bg-slate-700/50 cursor-pointer transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-700/50 last:border-b-0 flex justify-between"
                                     onClick={() => {
                                         setCoords({ lat: his.lat, lon: his.lon })
                                         setShowPanel(false);
                                     }}>
                                     {his.name},
                                     {his.state ? ` ${his.state},` : ""} {his.country}
+                                    <button onClick={(event) => {
+                                        event.stopPropagation();
+                                        const newPinedItem: CitySuggestion = {
+                                            name: his.name ?? debounceCity,
+                                            country: his.country ?? "",
+                                            state: "",
+                                            lat: his.lat ?? 0,
+                                            lon: his.lon ?? 0,
+                                        };
+                                        setPined((prev) => {
+                                            return [newPinedItem, ...prev];
+                                        })
+                                        setHistory((prev) =>
+                                            prev.filter((his) => his.name !== newPinedItem.name || his.country !== newPinedItem.country)
+                                        )
+                                    }}>
+                                        <Pin />
+                                    </button>
                                 </li>
                             ))
                         )}</ul>
