@@ -77,7 +77,9 @@ export function Body() {
     }
 
     const [data, setData] = useState<WeatherData>({});
-    const [city, setCity] = useState<string>("London");
+    const [city, setCity] = useState<string>(() => {
+        return localStorage.getItem("lastCity") ?? "London"
+    });
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [unit, setUnit] = useState<"metric" | "imperial">("metric");
@@ -125,6 +127,9 @@ export function Body() {
         localStorage.setItem("pined", JSON.stringify(pined));
     }, [pined]);
 
+    useEffect(() => {
+        localStorage.setItem("lastCity", city);
+    }, [city])
 
     useEffect(() => {
         const fetchDataFun = async () => {
@@ -237,30 +242,30 @@ export function Body() {
                             {pined && (
                                 pined.map((pin, index) => (
                                     <li key={pin.name + pin.country + index} className="px-4 py-3 text-slate-200 hover:bg-slate-700/50 cursor-pointer transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-700/50 last:border-b-0 flex justify-between"
-                                    onClick={() => {
-                                        setCoords({ lat: pin.lat, lon: pin.lon })
-                                        setShowPanel(false);
-                                    }}>
-                                    {pin.name},
-                                    {pin.state ? ` ${pin.state},` : ""} {pin.country}
-                                    <button onClick={(event) => {
-                                        event.stopPropagation();
-                                        const newHistoryItem: CitySuggestion = {
-                                            name: pin.name ?? debounceCity,
-                                            country: pin.country ?? "",
-                                            state: "",
-                                            lat: pin.lat ?? 0,
-                                            lon: pin.lon ?? 0,
-                                        };
-                                        setHistory((prev) => {
-                                            return [...prev,newHistoryItem];
-                                        })
-                                        setPined((prev) => 
-                                            prev.filter((eachPin) => eachPin.name !== pin.name || eachPin.country !== pin.country)
-                                        )
-                                    }}>
-                                        <PinOff />
-                                    </button>
+                                        onClick={() => {
+                                            setCoords({ lat: pin.lat, lon: pin.lon })
+                                            setShowPanel(false);
+                                        }}>
+                                        {pin.name},
+                                        {pin.state ? ` ${pin.state},` : ""} {pin.country}
+                                        <button onClick={(event) => {
+                                            event.stopPropagation();
+                                            const newHistoryItem: CitySuggestion = {
+                                                name: pin.name ?? debounceCity,
+                                                country: pin.country ?? "",
+                                                state: "",
+                                                lat: pin.lat ?? 0,
+                                                lon: pin.lon ?? 0,
+                                            };
+                                            setHistory((prev) => {
+                                                return [...prev, newHistoryItem];
+                                            })
+                                            setPined((prev) =>
+                                                prev.filter((eachPin) => eachPin.name !== pin.name || eachPin.country !== pin.country)
+                                            )
+                                        }}>
+                                            <PinOff />
+                                        </button>
                                     </li>
                                 ))
                             )}
