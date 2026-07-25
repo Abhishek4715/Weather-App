@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { History, Trash, Pin, PinOff } from "lucide-react";
+import { History, Trash, Pin, PinOff, CloudOff } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useGeoLocation } from "../hooks/useGeoLocation";
-import { ForecastChart } from "./ForeCastChart"
+import { ForecastChart } from "./ForecastChart";
+import { WeatherSkeleton } from "./WeatherSkeleton";
 
 export function Body() {
     const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
@@ -387,13 +388,15 @@ export function Body() {
                 )}
 
                 {/* Loading state */}
-                {loading && (
-                    <p className="text-slate-400 text-lg mb-4">Loading weather...</p>
-                )}
+                {loading && (<WeatherSkeleton />)}
 
                 {/* Error state */}
                 {error && (
-                    <p className="text-red-400 text-lg mb-4">{error}</p>
+                    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                        <CloudOff size={48} className="text-slate-500" />
+                        <p className="text-slate-300 text-lg font-medium">{error}</p>
+                        <p className="text-slate-500 text-sm">Try searching for a different city</p>
+                    </div>
                 )}
 
                 {/* City Name */}
@@ -423,7 +426,7 @@ export function Body() {
 
                         {/* Massive Temperature */}
                         <h1 className="text-8xl font-light drop-shadow-lg mb-10 ml-4">
-                            {data.main?.temp ? Math.round(data.main.temp) : "--"}{unit === "metric" ? "°" : "°F"}
+                            {data.main?.temp !== undefined ? Math.round(data.main.temp) : "--"}{unit === "metric" ? "°" : "°F"}
                         </h1>
 
                         {/* Bottom Details Grid */}
