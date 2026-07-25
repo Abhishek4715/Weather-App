@@ -85,8 +85,9 @@ export function Body() {
     const [unit, setUnit] = useState<"metric" | "imperial">("metric");
     const [forecast, setForecast] = useState<ForecastData | null>(null)
     const [showPanel, setShowPanel] = useState<boolean>(false);
-    const { coords, getLocation, setCoords } = useGeoLocation();
+    const { coords, getLocation, setCoords, geoError } = useGeoLocation();
     const debounceCity = useDebounce(city, 500);
+    const debouncedCity = useDebounce(city, 300);
     const [suggestion, setSuggestion] = useState<CitySuggestion[]>([]);
     const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
     const [history, setHistory] = useState<Array<CitySuggestion>>(() => {
@@ -225,14 +226,14 @@ export function Body() {
                 return;
             }
             try {
-                const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=5&appid=${API_KEY}`);
+                const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${debouncedCity}&limit=5&appid=${API_KEY}`);
                 setSuggestion(await response.json());
             } catch (error) {
                 console.error(error);
             }
         }
         fetchSuggestion();
-    }, [city, API_KEY])
+    }, [debouncedCity, API_KEY, city])
 
 
     return (
@@ -346,6 +347,11 @@ export function Body() {
                     </button>
                 </div>
 
+                {/* Location error */}
+                {geoError && (
+                    <p className="text-red-400 text-sm mb-2 text-center">{geoError}</p>
+                )}
+
                 {/* Search Bar */}
                 <div className="w-full mb-8 relative">
                     <input
@@ -372,7 +378,7 @@ export function Body() {
                 </div>
 
                 {/* Search Suggestion */}
-                {showSuggestion && (
+                {showSuggestion && Array.isArray(suggestion) && suggestion.length > 0 && (
                     <div className="w-full relative">
                         <ul className="absolute top-1 w-full bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-10">
                             {suggestion.map((suggest) => (

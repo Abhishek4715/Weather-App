@@ -2,22 +2,24 @@ import { useState } from "react";
 
 export function useGeoLocation() {
     const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [geoError, setGeoError] = useState<string | null>(null);
 
     const getLocation = () => {
         if (!navigator.geolocation) {
-            setError("GeoLocation not found");
+            setGeoError("GeoLocation not found");
+            return;
         }
 
         navigator.geolocation.getCurrentPosition((position) => {
+            setGeoError(null);
             setCoords({
                 lat: position.coords.latitude,
                 lon: position.coords.longitude,
             })
         },
-            () => setError("Permission denied or location unavailable")
+            () => setGeoError("Permission denied or location unavailable")
         )
     }
 
-    return { coords, error, getLocation, setCoords }
+    return { coords, geoError, getLocation, setCoords }
 }
