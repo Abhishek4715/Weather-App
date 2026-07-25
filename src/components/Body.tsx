@@ -86,8 +86,8 @@ export function Body() {
     const [forecast, setForecast] = useState<ForecastData | null>(null)
     const [showPanel, setShowPanel] = useState<boolean>(false);
     const { coords, getLocation, setCoords, geoError } = useGeoLocation();
-    const debounceCity = useDebounce(city, 500);
-    const debouncedCity = useDebounce(city, 300);
+    const weatherSearchCity = useDebounce(city, 500);
+    const suggestionSearchCity = useDebounce(city, 300);
     const [suggestion, setSuggestion] = useState<CitySuggestion[]>([]);
     const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
     const [history, setHistory] = useState<Array<CitySuggestion>>(() => {
@@ -159,21 +159,30 @@ export function Body() {
             setError(null);
 
             try {
-                const url = coords ? `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&appid=${API_KEY}&units=${unit}` : `https://api.openweathermap.org/data/2.5/weather?q=${debounceCity}&appid=${API_KEY}&units=${unit}`;
-                const response = await fetch(url);
+                const weatherUrl = coords ? `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&appid=${API_KEY}&units=${unit}`
+                    : `https://api.openweathermap.org/data/2.5/weather?q=${weatherSearchCity}&appid=${API_KEY}&units=${unit}`;
+                const forecastUrl = coords
+                    ? `https://api.openweathermap.org/data/2.5/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${API_KEY}&units=${unit}`
+                    : `https://api.openweathermap.org/data/2.5/forecast?q=${weatherSearchCity}&appid=${API_KEY}&units=${unit}`
+                const [weatherRes, forecastRes] = await Promise.all([
+                    fetch(weatherUrl), fetch(forecastUrl)])
 
-                if (!response.ok) {
+
+                if (!weatherRes.ok || !forecastRes.ok) {
                     throw new Error("Failed to fetch weather");
                 }
-                const fetchData = await response.json();
-                setData(fetchData);
+
+                const weatherJson = await weatherRes.json();
+                const forecastJson = await forecastRes.json();
+                setData(weatherJson);
+                setForecast(forecastJson);
 
                 const newHistoryItem: CitySuggestion = {
-                    name: fetchData.name ?? debounceCity,
-                    country: fetchData.country ?? "",
+                    name: weatherJson.name ?? weatherSearchCity,
+                    country: weatherJson.sys?.country ?? "",
                     state: "",
-                    lat: fetchData.coord?.lat ?? 0,
-                    lon: fetchData.coord?.lon ?? 0,
+                    lat: weatherJson.coord?.lat ?? 0,
+                    lon: weatherJson.coord?.lon ?? 0,
                 };
 
                 setHistory((prev) => {
@@ -192,30 +201,8 @@ export function Body() {
             }
         }
 
-        if (debounceCity) {
-            fetchDataFun();
-        }
-    }, [debounceCity, coords, unit, API_KEY]);
-
-
-    useEffect(() => {
-        const fetchForecast = async () => {
-            try {
-                const url = coords
-                    ? `https://api.openweathermap.org/data/2.5/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${API_KEY}&units=${unit}`
-                    : `https://api.openweathermap.org/data/2.5/forecast?q=${debounceCity}&appid=${API_KEY}&units=${unit}`
-
-                const res = await fetch(url)
-                if (!res.ok) throw new Error("Failed to fetch forecast")
-                setForecast(await res.json())
-            } catch (err) {
-                console.error(err)
-            }
-        }
-
-        if (coords || debounceCity) fetchForecast()
-    }, [debounceCity, coords, unit, API_KEY])
-
+        if (weatherSearchCity || coords) fetchDataFun()
+    }, [weatherSearchCity, coords, unit, API_KEY]);
 
 
     useEffect(() => {
@@ -226,14 +213,14 @@ export function Body() {
                 return;
             }
             try {
-                const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${debouncedCity}&limit=5&appid=${API_KEY}`);
+                const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${suggestionSearchCity}&limit=5&appid=${API_KEY}`);
                 setSuggestion(await response.json());
             } catch (error) {
                 console.error(error);
             }
         }
         fetchSuggestion();
-    }, [debouncedCity, API_KEY, city])
+    }, [suggestionSearchCity, API_KEY, city])
 
 
     return (
@@ -273,7 +260,7 @@ export function Body() {
                                         <button onClick={(event) => {
                                             event.stopPropagation();
                                             const newHistoryItem: CitySuggestion = {
-                                                name: pin.name ?? debounceCity,
+                                                name: pin.name ?? weatherSearchCity,
                                                 country: pin.country ?? "",
                                                 state: "",
                                                 lat: pin.lat ?? 0,
@@ -306,7 +293,7 @@ export function Body() {
                                     <button onClick={(event) => {
                                         event.stopPropagation();
                                         const newPinedItem: CitySuggestion = {
-                                            name: his.name ?? debounceCity,
+                                            name: his.name ?? weatherSearchCity,
                                             country: his.country ?? "",
                                             state: "",
                                             lat: his.lat ?? 0,
