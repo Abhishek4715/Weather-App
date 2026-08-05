@@ -1,77 +1,101 @@
-# React + TypeScript + Vite
+# Weather App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A weather app built with React, TypeScript, and Tailwind CSS. Search any city, use your current location, view a 24-hour forecast chart, and keep track of recently searched or pinned cities — all persisted locally so it remembers where you left off.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 🔍 **City search** with debounced input and live autocomplete suggestions
+- 📍 **Geolocation support** — one click to get weather for your current location
+- 🌡️ **Current conditions** — temperature, feels-like, min/max, humidity, pressure, wind speed
+- 📈 **24-hour forecast chart** with horizontal scroll
+- 🕘 **Search history** — recently searched cities, saved automatically
+- 📌 **Pinned cities** — save favorites for quick access
+- 🌗 **Dynamic background** — gradient shifts based on current weather condition
+- 🌡️ **Unit toggle** — switch between °C and °F
+- 💾 **Persisted state** — last city, history, and pins are saved to local storage
+- ⚡ Loading and error states throughout
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **React 19** + **TypeScript**
+- **Vite** — build tool and dev server
+- **Tailwind CSS v4** — styling
+- **Recharts** — forecast chart
+- **lucide-react** — icons
+- **OpenWeatherMap API** — weather data, forecast, and geocoding
 
-Note: This will impact Vite dev & build performances.
+## Getting Started
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (v18+)
+- An [OpenWeatherMap API key](https://home.openweathermap.org/users/sign_up) (free tier)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Setup
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Clone the repo
+   ```bash
+   git clone https://github.com/Abhishek4715/Weather-App.git
+   cd Weather-App
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies
+   ```bash
+   npm install
+   ```
 
+3. Add your API key
+
+   Create a `.env.local` file in the project root:
+   ```
+   VITE_WEATHER_API_KEY=your_openweathermap_api_key
+   ```
+
+4. Run the dev server
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Build for production
+
+```bash
+npm run build
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
 
 ```
+src/
+  components/
+    Body.tsx          # Main app component
+    ForeCastChart.tsx # 24-hour forecast line chart
+  hooks/
+    useDebounce.ts     # Debounces search input
+    useGeoLocation.ts  # Browser geolocation wrapper
+  App.tsx
+  main.tsx
+```
+
+## API Reference
+
+This project uses the following OpenWeatherMap endpoints:
+
+- Current weather: `/data/2.5/weather`
+- 5-day / 3-hour forecast: `/data/2.5/forecast`
+- Geocoding (city search suggestions): `/geo/1.0/direct`
+
+Free tier limits: 60 calls/minute, 1,000,000 calls/month — more than enough for personal use.
+
+## Roadmap / Ideas
+
+- [ ] Daily (not just hourly) forecast view
+- [ ] Sunrise/sunset display
+- [ ] Air quality index
+- [ ] Mobile responsiveness polish
+
+## License
+
+MIT
